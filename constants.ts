@@ -12,22 +12,16 @@ export const CIRCUIT_PATH: Point[] = [
     { x: 100, y: 300 },
 ];
 
-// Switch position (on the top horizontal wire)
-export const SWITCH_POSITION: Point = { x: 300, y: 100 };
-export const SWITCH_GAP = 40; // The size of the gap in the wire for the switch
-
 // Battery position (on the left vertical wire)
 export const BATTERY_POSITION: Point = { x: 100, y: 200 };
-export const BATTERY_WIDTH = 30;
-export const BATTERY_HEIGHT = 70;
-
 
 // Bulb position (on the bottom horizontal wire)
 export const BULB_POSITION: Point = { x: 300, y: 300 };
-export const BULB_RADIUS = 30; // Increased radius for a rounder look
-export const BULB_BASE_WIDTH = 25;
-export const BULB_BASE_HEIGHT = 15;
+export const BULB_RADIUS = 25;
 
+// Switch position (on the top horizontal wire)
+export const SWITCH_START: Point = { x: 275, y: 100 };
+export const SWITCH_END: Point = { x: 325, y: 100 };
 
 // Electron properties
 export const ELECTRON_RADIUS = 5;

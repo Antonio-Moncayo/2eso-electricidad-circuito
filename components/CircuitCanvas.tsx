@@ -2,16 +2,11 @@ import React, { forwardRef, useEffect } from 'react';
 import { Electron } from '../types';
 import { 
     CIRCUIT_PATH, 
-    BATTERY_POSITION,
-    BATTERY_WIDTH,
-    BATTERY_HEIGHT,
+    BATTERY_POSITION, 
     BULB_POSITION, 
-    BULB_RADIUS, 
     ELECTRON_RADIUS,
-    SWITCH_POSITION,
-    SWITCH_GAP,
-    BULB_BASE_WIDTH,
-    BULB_BASE_HEIGHT
+    SWITCH_START,
+    SWITCH_END
 } from '../constants';
 
 interface CircuitCanvasProps {
@@ -30,186 +25,221 @@ export const CircuitCanvas = forwardRef<HTMLCanvasElement, CircuitCanvasProps>((
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Clear canvas with 'Cartón Reciclado' color
-        ctx.fillStyle = '#F5EFE0';
-        ctx.fillRect(0, 0, width, height);
-        ctx.lineCap = 'round';
-        ctx.textAlign = 'start'; // Reset alignment
+        const drawWires = () => {
+            ctx.strokeStyle = '#2A3B49'; // Azul Pizarra
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
 
-        // 1. Draw Wires with 'Azul Pizarra'
-        ctx.strokeStyle = '#2A3B49';
-        ctx.lineWidth = 6;
-        ctx.beginPath();
-        // Top wire with gap for switch
-        ctx.moveTo(CIRCUIT_PATH[0].x, CIRCUIT_PATH[0].y);
-        ctx.lineTo(SWITCH_POSITION.x - SWITCH_GAP / 2, SWITCH_POSITION.y);
-        ctx.moveTo(SWITCH_POSITION.x + SWITCH_GAP / 2, SWITCH_POSITION.y);
-        ctx.lineTo(CIRCUIT_PATH[1].x, CIRCUIT_PATH[1].y);
-        // Right vertical wire
-        ctx.lineTo(CIRCUIT_PATH[2].x, CIRCUIT_PATH[2].y);
-        // Bottom wire with gap for bulb
-        ctx.lineTo(BULB_POSITION.x + BULB_BASE_WIDTH / 2, CIRCUIT_PATH[2].y);
-        ctx.moveTo(BULB_POSITION.x - BULB_BASE_WIDTH / 2, CIRCUIT_PATH[3].y);
-        ctx.lineTo(CIRCUIT_PATH[3].x, CIRCUIT_PATH[3].y);
-        // Left wire with gap for battery
-        ctx.lineTo(CIRCUIT_PATH[3].x, BATTERY_POSITION.y + BATTERY_HEIGHT / 2);
-        ctx.moveTo(CIRCUIT_PATH[0].x, BATTERY_POSITION.y - BATTERY_HEIGHT / 2);
-        ctx.lineTo(CIRCUIT_PATH[0].x, CIRCUIT_PATH[0].y);
-        ctx.stroke();
-
-        // 2. Draw Switch
-        const switchLeft = { x: SWITCH_POSITION.x - SWITCH_GAP / 2, y: SWITCH_POSITION.y };
-        const switchRight = { x: SWITCH_POSITION.x + SWITCH_GAP / 2, y: SWITCH_POSITION.y };
-        // Terminals
-        ctx.fillStyle = '#2A3B49';
-        ctx.beginPath();
-        ctx.arc(switchLeft.x, switchLeft.y, 6, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(switchRight.x, switchRight.y, 6, 0, 2 * Math.PI);
-        ctx.fill();
-        // Lever
-        ctx.beginPath();
-        ctx.moveTo(switchLeft.x, switchLeft.y);
-        ctx.lineWidth = 5;
-        if (isSwitchOn) {
-            ctx.strokeStyle = '#2A3B49'; // 'Azul Pizarra' for closed switch
-            ctx.lineTo(switchRight.x, switchRight.y);
-        } else {
-            ctx.strokeStyle = '#D9534F'; // 'Rojo Tinta de Sello' for open switch
-            ctx.lineTo(switchLeft.x + (SWITCH_GAP * 0.8), switchLeft.y - (SWITCH_GAP * 0.8));
-        }
-        ctx.stroke();
-        // Label
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#333333';
-        ctx.textAlign = 'center';
-        ctx.fillText('Interruptor', SWITCH_POSITION.x, SWITCH_POSITION.y - 35);
-
-
-        // 3. Draw Battery (AA-style)
-        const terminalHeight = 8;
-        // Main Body
-        ctx.fillStyle = '#C0C0C0'; // Silver
-        ctx.strokeStyle = '#555555';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.roundRect(BATTERY_POSITION.x - BATTERY_WIDTH / 2, BATTERY_POSITION.y - BATTERY_HEIGHT / 2, BATTERY_WIDTH, BATTERY_HEIGHT, 5);
-        ctx.fill();
-        ctx.stroke();
-        // Positive Terminal Nub
-        ctx.fillStyle = '#A0A0A0';
-        ctx.beginPath();
-        ctx.rect(BATTERY_POSITION.x - BATTERY_WIDTH / 4, BATTERY_POSITION.y - BATTERY_HEIGHT / 2 - terminalHeight, BATTERY_WIDTH / 2, terminalHeight);
-        ctx.fill();
-        ctx.stroke();
-        // Labels
-        ctx.font = 'bold 20px sans-serif';
-        ctx.fillStyle = '#333333';
-        ctx.textAlign = 'center';
-        ctx.fillText('+', BATTERY_POSITION.x, BATTERY_POSITION.y - BATTERY_HEIGHT / 2 + 20);
-        ctx.font = 'bold 28px sans-serif';
-        ctx.fillText('−', BATTERY_POSITION.x, BATTERY_POSITION.y + BATTERY_HEIGHT / 2 - 5);
-        // Battery Label
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#333333';
-        ctx.textAlign = 'left';
-        ctx.fillText('Pila', BATTERY_POSITION.x + BATTERY_WIDTH / 2 + 10, BATTERY_POSITION.y + 6);
-
-
-        // 4. Draw Bulb
-        const bulbBaseY = BULB_POSITION.y;
-        const bulbCenterX = BULB_POSITION.x;
-        const bulbCenterY = bulbBaseY - BULB_BASE_HEIGHT - (BULB_RADIUS * 0.6);
-        ctx.lineWidth = 2;
-
-        // Base
-        ctx.fillStyle = '#6B7280'; // Gray
-        ctx.beginPath();
-        ctx.rect(bulbCenterX - BULB_BASE_WIDTH / 2, bulbBaseY - BULB_BASE_HEIGHT, BULB_BASE_WIDTH, BULB_BASE_HEIGHT);
-        ctx.fill();
-        // Base threads
-        ctx.strokeStyle = '#9CA3AF';
-        ctx.lineWidth = 1.5;
-        for (let i = 0; i < 3; i++) {
-            const y = bulbBaseY - BULB_BASE_HEIGHT + 3 + (i * 4);
+            // Draw wire segments, leaving a gap for the switch
             ctx.beginPath();
-            ctx.moveTo(bulbCenterX - BULB_BASE_WIDTH / 2, y);
-            ctx.lineTo(bulbCenterX + BULB_BASE_WIDTH / 2, y);
+            ctx.moveTo(SWITCH_END.x, SWITCH_END.y);
+            ctx.lineTo(CIRCUIT_PATH[1].x, CIRCUIT_PATH[1].y);
+            ctx.lineTo(CIRCUIT_PATH[2].x, CIRCUIT_PATH[2].y);
+            ctx.lineTo(CIRCUIT_PATH[3].x, CIRCUIT_PATH[3].y);
+            ctx.lineTo(CIRCUIT_PATH[0].x, CIRCUIT_PATH[0].y);
+            ctx.lineTo(SWITCH_START.x, SWITCH_START.y);
             ctx.stroke();
-        }
+        };
 
-        // Glass
-        ctx.beginPath();
-        ctx.arc(bulbCenterX, bulbCenterY, BULB_RADIUS, Math.PI * 0.8, Math.PI * 2.2);
-        ctx.closePath();
-
-        // Filament
-        const filamentY = bulbCenterY + 5;
-        const filamentWidth = BULB_RADIUS * 0.4;
-        const postHeight = BULB_RADIUS * 0.5;
-
-        const filamentPath = new Path2D();
-        // Posts
-        filamentPath.moveTo(bulbCenterX - filamentWidth / 2, bulbBaseY - BULB_BASE_HEIGHT);
-        filamentPath.lineTo(bulbCenterX - filamentWidth / 2, filamentY - postHeight / 2);
-        filamentPath.moveTo(bulbCenterX + filamentWidth / 2, bulbBaseY - BULB_BASE_HEIGHT);
-        filamentPath.lineTo(bulbCenterX + filamentWidth / 2, filamentY - postHeight / 2);
-        // Filament wire
-        filamentPath.moveTo(bulbCenterX - filamentWidth / 2, filamentY - postHeight / 2);
-        filamentPath.lineTo(bulbCenterX + filamentWidth / 2, filamentY - postHeight / 2);
-        
-        if (isBulbOn) {
-            // Glowing Glass
-            ctx.shadowBlur = 35;
-            ctx.shadowColor = '#FBBF24'; // Strong yellow glow
-            ctx.fillStyle = 'rgba(253, 224, 71, 0.6)'; // More opaque yellow fill
-            ctx.fill();
-            ctx.shadowBlur = 0;
-            ctx.strokeStyle = 'rgba(250, 204, 21, 0.8)'; // More opaque border
-            ctx.stroke();
+        const drawSwitch = () => {
+            ctx.lineWidth = 4;
+            ctx.strokeStyle = '#2A3B49'; // Azul Pizarra
+            ctx.lineCap = 'round';
             
-            // Glowing Filament
-            ctx.strokeStyle = '#FFFFFF';
-            ctx.lineWidth = 3.5;
-            ctx.shadowBlur = 15;
-            ctx.shadowColor = '#FFFFFF';
-            ctx.stroke(filamentPath);
-            ctx.shadowBlur = 0;
-
-        } else {
-            // Off Glass
-            ctx.fillStyle = 'rgba(169, 169, 169, 0.2)';
+            // Connection points
+            const pointRadius = 5;
+            ctx.fillStyle = '#2A3B49';
+            ctx.beginPath();
+            ctx.arc(SWITCH_START.x, SWITCH_START.y, pointRadius, 0, 2 * Math.PI);
             ctx.fill();
-            ctx.strokeStyle = '#808080';
+            ctx.beginPath();
+            ctx.arc(SWITCH_END.x, SWITCH_END.y, pointRadius, 0, 2 * Math.PI);
+            ctx.fill();
+
+            // Lever
+            ctx.beginPath();
+            ctx.moveTo(SWITCH_START.x, SWITCH_START.y);
+
+            if (isSwitchOn) {
+                ctx.lineTo(SWITCH_END.x, SWITCH_END.y);
+            } else {
+                const leverLength = (SWITCH_END.x - SWITCH_START.x) * 1.1;
+                const angle = -Math.PI / 3;
+                ctx.lineTo(
+                    SWITCH_START.x + leverLength * Math.cos(angle),
+                    SWITCH_START.y + leverLength * Math.sin(angle)
+                );
+            }
+            ctx.stroke();
+        };
+
+        const drawBattery = () => {
+            const batteryWidth = 40;
+            const batteryHeight = 80;
+            const batteryX = BATTERY_POSITION.x - batteryWidth / 2;
+            const batteryY = BATTERY_POSITION.y - batteryHeight / 2;
+            const capHeight = 8;
+            const capWidth = 20;
+
+            // Body
+            const gradient = ctx.createLinearGradient(batteryX, batteryY, batteryX + batteryWidth, batteryY);
+            gradient.addColorStop(0, '#3c5265'); // Lighter Azul Pizarra
+            gradient.addColorStop(0.5, '#2A3B49'); // Azul Pizarra
+            gradient.addColorStop(1, '#1d2a34'); // Darker Azul Pizarra
+            ctx.fillStyle = gradient;
+            ctx.strokeStyle = '#1d2a34'; // Darkest Azul Pizarra
+            ctx.lineWidth = 2;
+            
+            ctx.beginPath();
+            ctx.roundRect(batteryX, batteryY, batteryWidth, batteryHeight, [8]);
+            ctx.fill();
             ctx.stroke();
 
-            // Off Filament
-            ctx.strokeStyle = '#333333';
-            ctx.lineWidth = 1.5;
-            ctx.stroke(filamentPath);
-        }
-        
-        // Bulb Label
-        ctx.font = '16px sans-serif';
-        ctx.fillStyle = '#333333';
-        ctx.textAlign = 'center';
-        ctx.fillText('Bombilla', bulbCenterX, bulbBaseY + 25);
-        ctx.textAlign = 'start';
-
-        // 5. Draw Electrons with 'Rojo Tinta de Sello'
-        electrons.forEach(electron => {
+            // Positive Cap
+            ctx.fillStyle = '#3c5265'; // Lighter Azul Pizarra
+            ctx.strokeStyle = '#1d2a34';
             ctx.beginPath();
-            ctx.arc(electron.x, electron.y, ELECTRON_RADIUS, 0, 2 * Math.PI);
-            ctx.fillStyle = '#D9534F'; 
-            // Electron glow
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#D9534F';
+            ctx.roundRect(BATTERY_POSITION.x - capWidth / 2, batteryY - capHeight + 2, capWidth, capHeight, [3]);
             ctx.fill();
+            ctx.stroke();
+
+            // Markings
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Positive sign
+            ctx.font = 'bold 22px sans-serif';
+            ctx.fillStyle = '#D9534F'; // Rojo Tinta de Sello
+            ctx.fillText('+', BATTERY_POSITION.x, batteryY + 20);
+            
+            // Negative sign
+            ctx.font = 'bold 32px sans-serif';
+            ctx.fillStyle = '#F5EFE0'; // Cartón Reciclado
+            ctx.fillText('−', BATTERY_POSITION.x, batteryY + batteryHeight - 20);
+        };
+        
+        const drawBulb = () => {
+            const bulbCenterX = BULB_POSITION.x;
+            const baseTopY = BULB_POSITION.y - 10;
+            const baseWidth = 24;
+            const baseHeight = 18;
+            const bulbHeight = 55;
+            const bulbWidth = 45;
+
+            // Base
+            ctx.fillStyle = '#2A3B49'; // Azul Pizarra
+            ctx.fillRect(bulbCenterX - baseWidth / 2, baseTopY, baseWidth, baseHeight);
+            
+            // Threads
+            ctx.strokeStyle = '#3c5265'; // Lighter Azul Pizarra
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 4; i++) {
+                const y = baseTopY + 4 + i * 4;
+                ctx.beginPath();
+                ctx.moveTo(bulbCenterX - baseWidth / 2, y);
+                ctx.lineTo(bulbCenterX + baseWidth / 2, y);
+                ctx.stroke();
+            }
+
+            // Glass (pear shape)
+            ctx.beginPath();
+            ctx.moveTo(bulbCenterX - baseWidth / 2, baseTopY); // Start at left of base
+            // Curve up to the top
+            ctx.quadraticCurveTo(
+                bulbCenterX - bulbWidth / 1.5, baseTopY - bulbHeight, // control point (wide part)
+                bulbCenterX, baseTopY - bulbHeight // top point
+            );
+            // Curve down from the top
+            ctx.quadraticCurveTo(
+                bulbCenterX + bulbWidth / 1.5, baseTopY - bulbHeight, // control point (wide part)
+                bulbCenterX + baseWidth / 2, baseTopY // end at right of base
+            );
+            ctx.closePath();
+
+            ctx.lineWidth = 2.5;
+            if (isBulbOn) {
+                ctx.fillStyle = 'rgba(255, 238, 88, 0.3)';
+                ctx.strokeStyle = 'rgba(255, 238, 88, 0.7)';
+                ctx.shadowBlur = 40;
+                ctx.shadowColor = '#FFEE58';
+            } else {
+                ctx.fillStyle = 'rgba(42, 59, 73, 0.1)';
+                ctx.strokeStyle = 'rgba(42, 59, 73, 0.4)';
+                ctx.shadowBlur = 0;
+            }
+            ctx.fill();
+            ctx.stroke();
             ctx.shadowBlur = 0;
-        });
+
+            // Filament
+            const filamentTopY = baseTopY - bulbHeight * 0.5;
+            const filamentBottomY = baseTopY - 2;
+            
+            ctx.beginPath();
+            ctx.moveTo(bulbCenterX - 8, filamentBottomY);
+            ctx.lineTo(bulbCenterX - 5, filamentTopY);
+            ctx.moveTo(bulbCenterX + 8, filamentBottomY);
+            ctx.lineTo(bulbCenterX + 5, filamentTopY);
+            ctx.moveTo(bulbCenterX - 5, filamentTopY);
+            ctx.quadraticCurveTo(bulbCenterX, filamentTopY - 12, bulbCenterX + 5, filamentTopY);
+
+            if (isBulbOn) {
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.shadowBlur = 20;
+                ctx.shadowColor = '#FFFFFF';
+            } else {
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = '#333333';
+            }
+            ctx.stroke();
+            ctx.shadowBlur = 0;
+        };
+
+        const drawElectrons = () => {
+             electrons.forEach(electron => {
+                ctx.beginPath();
+                ctx.arc(electron.x, electron.y, ELECTRON_RADIUS, 0, 2 * Math.PI);
+                ctx.fillStyle = '#D9534F'; // Rojo Tinta de Sello
+                ctx.shadowBlur = 8;
+                ctx.shadowColor = 'rgba(217, 83, 79, 0.7)';
+                ctx.fill();
+                ctx.shadowBlur = 0;
+            });
+        };
+
+        const drawLabels = () => {
+            ctx.font = 'bold 16px "Courier New", monospace';
+            ctx.fillStyle = '#2A3B49'; // Azul Pizarra
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+    
+            // Pila label
+            ctx.fillText('Pila', BATTERY_POSITION.x + 45, BATTERY_POSITION.y);
+    
+            // Interruptor label
+            ctx.fillText('Interruptor', (SWITCH_START.x + SWITCH_END.x) / 2, SWITCH_START.y - 25);
+    
+            // Bombilla label
+            ctx.fillText('Bombilla', BULB_POSITION.x, BULB_POSITION.y + 45);
+        };
+
+        // Main Drawing sequence
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#FDF6E3'; // Papel Envejecido
+        ctx.fillRect(0, 0, width, height);
+
+        drawWires();
+        drawBattery();
+        drawBulb();
+        drawSwitch();
+        drawLabels();
+        
+        if(isSwitchOn) {
+            drawElectrons();
+        }
 
     }, [isSwitchOn, isBulbOn, electrons, width, height, ref]);
 
-    return <canvas ref={ref} width={width} height={height} className="rounded-lg border-2 border-[#2A3B49]" />;
+    return <canvas ref={ref} width={width} height={height} className="rounded-lg border-2 border-[#2A3B49]/30" />;
 });

@@ -1,5 +1,6 @@
 {
-  "name": "Interactive Circuit Simulation",
-  "description": "An educational web application that provides an interactive animation of a simple electrical circuit. Users can turn a switch on and off to see electrons flow and light up a bulb, rendered on an HTML5 canvas.",
-  "requestFramePermissions": []
+  "name": "Simulación Interactiva de Circuito",
+  "description": "Una aplicación web educativa que proporciona una animación interactiva de un circuito eléctrico simple. Los usuarios pueden encender y apagar un interruptor para ver el flujo de electrones y encender una bombilla, renderizado en un lienzo HTML5.",
+  "requestFramePermissions": [],
+  "prompt": ""
 }

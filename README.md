@@ -29,3 +29,4 @@ Puedes alojar tu propia versión de esta simulación de forma gratuita utilizand
 ---
 
 Este proyecto está configurado para ejecutarse directamente en el navegador sin necesidad de un paso de compilación (`build`), gracias al uso de `importmap` para gestionar las dependencias de React.
+Actualización para forzar el despliegue.

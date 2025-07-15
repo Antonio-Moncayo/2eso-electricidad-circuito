@@ -1,0 +1,5 @@
+{
+  "name": "Interactive Circuit Simulation",
+  "description": "An educational web application that provides an interactive animation of a simple electrical circuit. Users can turn a switch on and off to see electrons flow and light up a bulb, rendered on an HTML5 canvas.",
+  "requestFramePermissions": []
+}
